@@ -1,0 +1,31 @@
+# Large input files
+*.vcf
+*.vcf.gz
+*.vcf.bgz
+*.tbi
+*.csi
+
+# Django
+*.sqlite3
+staticfiles/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local settings
+.env
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Keep the small test fixture in Git
+!genotypes/fixtures/*.vcf
+
+# PDFs
+test-task-django.pdf

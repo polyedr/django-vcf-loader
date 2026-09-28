@@ -1,0 +1,20 @@
+# GIAB / VCF — большие текстовые файлы, не индексировать
+*.vcf
+*.vcf.gz
+*.vcf.bgz
+*.tbi
+*.csi
+
+# Локальная БД
+*.sqlite3
+db.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Allow the small test fixture
+!genotypes/fixtures/*.vcf

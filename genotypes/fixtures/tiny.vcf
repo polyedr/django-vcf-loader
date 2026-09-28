@@ -1,0 +1,14 @@
+##fileformat=VCFv4.2
+##reference=GRCh38
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	HG001
+chr1	783006	.	A	G	50	PASS	.	GT	0/1
+chr1	783175	.	C	T	60	PASS	.	GT:DP	1/1:35
+chr1	784102	.	G	A,C	45	PASS	.	DP:GT	28:1/2
+chr2	10500	.	T	C	30	PASS	.	GT	0/0
+chr2	10642	.	A	AT	55	PASS	.	GT:DP	0/1:22
+chr3	20115	.	CT	C	70	PASS	.	GT	1/1
+chr7	55001	.	G	T	40	PASS	.	GT	./.
+chr10	99812	.	C	A	80	PASS	.	DP:GT	41:0|1
+chr17	43071077	.	A	G	90	PASS	.	GT	0/1
+chr22	50100234	.	T	C	65	PASS	.	GT:DP	1/1:18
