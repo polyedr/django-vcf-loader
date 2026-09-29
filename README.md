@@ -71,14 +71,37 @@ python manage.py load_vcf sample.vcf.gz \
 python manage.py runserver
 ```
 
-Пример API-запроса:
+Основной API-запрос:
 
 ```text
 http://127.0.0.1:8000/api/get_genotypes/?chromosome=chr1&coordinate=783006
 ```
 
-Параметры `chromosome` и `coordinate` можно использовать вместе или по
-отдельности. Без параметров endpoint возвращает все записи.
+Проверка бонусных связей:
+
+```text
+# Образец
+http://127.0.0.1:8000/api/get_genotypes/?sample=HG001
+
+# Вид и сборка генома
+http://127.0.0.1:8000/api/get_genotypes/?species=Homo%20sapiens&assembly=GRCh38
+
+# Все фильтры вместе
+http://127.0.0.1:8000/api/get_genotypes/?species=Homo%20sapiens&assembly=GRCh38&sample=HG001&chromosome=chr1&coordinate=783006
+```
+
+Чтобы проверить загрузку второго образца, выполните:
+
+```bash
+python manage.py load_vcf genotypes/fixtures/tiny.vcf --sample HG002
+```
+
+После этого запрос `?sample=HG002` вернёт генотипы нового Sample, используя
+те же Species, Assembly и Chromosome.
+
+Параметры `species`, `assembly`, `sample`, `chromosome` и `coordinate` можно
+использовать вместе или по отдельности. Без параметров endpoint возвращает
+все записи.
 
 Пример ответа:
 
@@ -86,6 +109,8 @@ http://127.0.0.1:8000/api/get_genotypes/?chromosome=chr1&coordinate=783006
 [
   {
     "id": 1,
+    "species": "Homo sapiens",
+    "assembly": "GRCh38",
     "sample": "HG001",
     "chromosome": "chr1",
     "coordinate": 783006,

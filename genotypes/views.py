@@ -10,11 +10,23 @@ class GenotypeListView(ListAPIView):
 
     def get_queryset(self):
         queryset = Genotype.objects.select_related(
-            "chromosome",
-            "sample",
+            "chromosome__assembly",
+            "sample__species",
         ).order_by("id")
+        species = self.request.query_params.get("species")
+        assembly = self.request.query_params.get("assembly")
+        sample = self.request.query_params.get("sample")
         chromosome = self.request.query_params.get("chromosome")
         coordinate = self.request.query_params.get("coordinate")
+
+        if species:
+            queryset = queryset.filter(sample__species__name=species)
+
+        if assembly:
+            queryset = queryset.filter(chromosome__assembly__name=assembly)
+
+        if sample:
+            queryset = queryset.filter(sample__name=sample)
 
         if chromosome:
             queryset = queryset.filter(chromosome__name=chromosome)

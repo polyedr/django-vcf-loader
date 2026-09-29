@@ -102,9 +102,28 @@ class GenotypeApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["species"], "Homo sapiens")
+        self.assertEqual(response.data[0]["assembly"], "GRCh38")
         self.assertEqual(response.data[0]["sample"], "HG001")
         self.assertEqual(response.data[0]["chromosome"], "chr1")
         self.assertEqual(response.data[0]["coordinate"], 783006)
+
+    def test_filters_by_bonus_relations(self):
+        response = self.client.get(
+            self.url,
+            {
+                "species": "Homo sapiens",
+                "assembly": "GRCh38",
+                "sample": "HG001",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+        response = self.client.get(self.url, {"sample": "unknown"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
 
     def test_returns_empty_list_when_genotype_does_not_exist(self):
         response = self.client.get(
