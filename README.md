@@ -52,6 +52,19 @@ python manage.py load_vcf HG001_GRCh38_1_22_v4.2.1_benchmark.vcf.gz
 python manage.py load_vcf genotypes/fixtures/tiny.vcf
 ```
 
+По умолчанию используются вид `Homo sapiens`, сборка `GRCh38` и имя образца
+из заголовка VCF. Их можно переопределить:
+
+```bash
+python manage.py load_vcf sample.vcf.gz \
+  --species "Homo sapiens" \
+  --assembly GRCh38 \
+  --sample HG002
+```
+
+При загрузке разных файлов общие Species, Assembly и Chromosome
+переиспользуются, а генотипы связываются с соответствующим Sample.
+
 ## Запуск
 
 ```bash
@@ -73,6 +86,7 @@ http://127.0.0.1:8000/api/get_genotypes/?chromosome=chr1&coordinate=783006
 [
   {
     "id": 1,
+    "sample": "HG001",
     "chromosome": "chr1",
     "coordinate": 783006,
     "ref": "A",

@@ -43,10 +43,10 @@
 
 Бонус (если останется время) — отдельные модели и связи:
 
-- [ ] `Species`, `Assembly`, `Chromosome`, `Sample`
-- [ ] `Coordinate` / `Allele` — только если не раздует загрузку;
-      иначе chromosome+position остаются полями `Genotype`,
-      а связи — через Sample/Assembly/Chromosome
+- [x] `Species`, `Assembly`, `Chromosome`, `Sample`
+- [x] `Coordinate` / `Allele` не добавляем, чтобы не раздувать загрузку;
+      chromosome+position остаются в `Genotype`, связи сделаны через
+      Sample/Assembly/Chromosome
 
 ## 3. Команда `load_vcf`
 
@@ -82,7 +82,8 @@
 
 - [x] `migrate` на чистой SQLite
 - [x] `load_vcf` на `tiny.vcf`
-- [x] `load_vcf` на полном `.vcf.gz`: 3 893 341 строк за 1 мин 24 с
+- [x] `load_vcf` на полном `.vcf.gz`: 3 893 341 строк;
+      бонусная схема со связями — 2 мин 15 с
 - [x] Запрос из ТЗ через HTTP
 - [x] Прогнать тесты
 

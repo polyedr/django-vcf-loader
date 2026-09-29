@@ -9,7 +9,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from genotypes.models import Genotype
+from genotypes.models import Assembly, Chromosome, Genotype, Sample, Species
 
 
 class LoadVcfCommandTests(TestCase):
@@ -20,10 +20,19 @@ class LoadVcfCommandTests(TestCase):
 
         self.assertEqual(Genotype.objects.count(), 10)
 
-        genotype = Genotype.objects.get(chromosome="chr1", position=784102)
+        genotype = Genotype.objects.get(
+            chromosome__name="chr1",
+            position=784102,
+        )
         self.assertEqual(genotype.ref, "G")
         self.assertEqual(genotype.alt, "A,C")
         self.assertEqual(genotype.gt, "1/2")
+        self.assertEqual(genotype.sample.name, "HG001")
+        self.assertEqual(genotype.chromosome.assembly.name, "GRCh38")
+        self.assertEqual(Species.objects.count(), 1)
+        self.assertEqual(Assembly.objects.count(), 1)
+        self.assertEqual(Chromosome.objects.count(), 7)
+        self.assertEqual(Sample.objects.count(), 1)
 
     def test_loads_gzipped_vcf(self):
         with tempfile.TemporaryDirectory() as temp_directory:
@@ -37,18 +46,41 @@ class LoadVcfCommandTests(TestCase):
 
         self.assertEqual(Genotype.objects.count(), 10)
 
+    def test_reuses_relations_for_different_samples(self):
+        call_command("load_vcf", self.fixture_path, sample="HG001")
+        call_command("load_vcf", self.fixture_path, sample="HG002")
+
+        self.assertEqual(Genotype.objects.count(), 20)
+        self.assertEqual(Species.objects.count(), 1)
+        self.assertEqual(Assembly.objects.count(), 1)
+        self.assertEqual(Chromosome.objects.count(), 7)
+        self.assertEqual(Sample.objects.count(), 2)
+
 
 class GenotypeApiTests(APITestCase):
     def setUp(self):
+        species = Species.objects.create(name="Homo sapiens")
+        assembly = Assembly.objects.create(name="GRCh38", species=species)
+        sample = Sample.objects.create(name="HG001", species=species)
+        chromosome_1 = Chromosome.objects.create(
+            name="chr1",
+            assembly=assembly,
+        )
+        chromosome_2 = Chromosome.objects.create(
+            name="chr2",
+            assembly=assembly,
+        )
         Genotype.objects.create(
-            chromosome="chr1",
+            chromosome=chromosome_1,
+            sample=sample,
             position=783006,
             ref="A",
             alt="G",
             gt="0/1",
         )
         Genotype.objects.create(
-            chromosome="chr2",
+            chromosome=chromosome_2,
+            sample=sample,
             position=10500,
             ref="T",
             alt="C",
@@ -70,6 +102,7 @@ class GenotypeApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["sample"], "HG001")
         self.assertEqual(response.data[0]["chromosome"], "chr1")
         self.assertEqual(response.data[0]["coordinate"], 783006)
 

@@ -9,12 +9,15 @@ class GenotypeListView(ListAPIView):
     serializer_class = GenotypeSerializer
 
     def get_queryset(self):
-        queryset = Genotype.objects.all().order_by("id")
+        queryset = Genotype.objects.select_related(
+            "chromosome",
+            "sample",
+        ).order_by("id")
         chromosome = self.request.query_params.get("chromosome")
         coordinate = self.request.query_params.get("coordinate")
 
         if chromosome:
-            queryset = queryset.filter(chromosome=chromosome)
+            queryset = queryset.filter(chromosome__name=chromosome)
 
         if coordinate:
             try:

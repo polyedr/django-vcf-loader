@@ -3,7 +3,7 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
-from genotypes.models import Genotype
+from genotypes.models import Assembly, Chromosome, Genotype, Sample, Species
 
 
 class Command(BaseCommand):
@@ -13,6 +13,20 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("vcf_file", help="Path to a .vcf or .vcf.gz file")
+        parser.add_argument(
+            "--species",
+            default="Homo sapiens",
+            help="Species name (default: Homo sapiens)",
+        )
+        parser.add_argument(
+            "--assembly",
+            default="GRCh38",
+            help="Genome assembly name (default: GRCh38)",
+        )
+        parser.add_argument(
+            "--sample",
+            help="Sample name (default: value from the VCF header)",
+        )
 
     def handle(self, *args, **options):
         file_path = Path(options["vcf_file"])
@@ -24,6 +38,9 @@ class Command(BaseCommand):
         batch = []
         total = 0
         header_found = False
+        assembly = None
+        sample = None
+        chromosome_cache = {}
 
         try:
             with open_file(file_path, mode="rt", encoding="utf-8") as vcf_file:
@@ -37,6 +54,7 @@ class Command(BaseCommand):
                             raise CommandError(
                                 "VCF must contain FORMAT and at least one sample column"
                             )
+                        assembly, sample = self.get_context(columns, options)
                         header_found = True
                         continue
 
@@ -46,7 +64,13 @@ class Command(BaseCommand):
                     if not header_found:
                         raise CommandError("VCF header line #CHROM was not found")
 
-                    genotype = self.parse_line(line, line_number)
+                    genotype = self.parse_line(
+                        line,
+                        line_number,
+                        assembly,
+                        sample,
+                        chromosome_cache,
+                    )
                     batch.append(genotype)
 
                     if len(batch) >= self.batch_size:
@@ -68,7 +92,20 @@ class Command(BaseCommand):
             self.style.SUCCESS(f"Loaded {total} genotypes from {file_path}")
         )
 
-    def parse_line(self, line, line_number):
+    def get_context(self, columns, options):
+        species, _ = Species.objects.get_or_create(name=options["species"])
+        assembly, _ = Assembly.objects.get_or_create(
+            name=options["assembly"],
+            species=species,
+        )
+        sample_name = options["sample"] or columns[9]
+        sample, _ = Sample.objects.get_or_create(
+            name=sample_name,
+            species=species,
+        )
+        return assembly, sample
+
+    def parse_line(self, line, line_number, assembly, sample, chromosome_cache):
         columns = line.rstrip("\n").split("\t")
 
         if len(columns) < 10:
@@ -92,8 +129,19 @@ class Command(BaseCommand):
             if gt_index < len(sample_values):
                 gt = sample_values[gt_index]
 
+        chromosome_name = columns[0]
+        chromosome = chromosome_cache.get(chromosome_name)
+
+        if chromosome is None:
+            chromosome, _ = Chromosome.objects.get_or_create(
+                name=chromosome_name,
+                assembly=assembly,
+            )
+            chromosome_cache[chromosome_name] = chromosome
+
         return Genotype(
-            chromosome=columns[0],
+            chromosome=chromosome,
+            sample=sample,
             position=position,
             ref=columns[3],
             alt=columns[4],
